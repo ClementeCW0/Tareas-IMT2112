@@ -1,8 +1,8 @@
-\begin{enumerate}[label=\bf\arabic*.]
+\begin{enumerate}[label=\bf\arabic*.
 	\item Se corrió el script \texttt{tarea2\_generate\_matrix.py} utilizando \texttt{ndim=10000}
 	\item \begin{enumerate}[label=\alph*)]
-			\item 
-			\item
+			\item La iteración principal sobre $k$ puede ser paralelizada implementando la paralelización de la multiplicación matvec entre $A$ y $b_k$. Una vez obtenido este vector se puede paralelizar el cálculo de $b_k^Tb_k$
+			\item La multiplicación matriz-vector (matvec) puede ser paralelizada particionando la matriz $A$ en submatrices asociadas a un solo proceso y particionando tanto el vector $b_k$ como el vector que almacenará el resultado de esta multiplicación en subvectores. De esta forma, la cantidad de procesos viene dada por $p = rc$, donde $r$ y $c$ son las cantidades de filas y columnas respectivamente que tendrá cada submatriz $A_{ij}$. 
 			\item
 	\end{enumerate}
 	\item
