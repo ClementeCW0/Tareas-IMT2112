@@ -1,0 +1,24 @@
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\pa}[1]{\left( #1 \right)}
+\newcommand{\ab}[1]{\left| #1 \right|}
+\newcommand{\cuad}[1]{\left[ #1 \right]}
+\newcommand{\conj}[1]{\left\{ #1 \right\}}
+\newcommand\aug{\fboxsep=-\fboxrule\!\!\!\fbox{\strut}\!\!\!}
+
+\makeatletter
+\newenvironment{solucion}{
+  \begin{tcolorbox}[breakable, title={Solución}]
+  \par
+  \pushQED{\qed}%
+  \normalfont \topsep6\p@\@plus6\p@\relax
+  \trivlist
+  \item[]\ignorespaces 
+}{%
+  \popQED\endtrivlist\@endpefalse
+  \end{tcolorbox}
+}
+\makeatother
