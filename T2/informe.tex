@@ -1,10 +1,51 @@
-\begin{enumerate}[label=\bf\arabic*.
+\begin{enumerate}[label=\bf\arabic*.]
 	\item Se corrió el script \texttt{tarea2\_generate\_matrix.py} utilizando \texttt{ndim=10000}
 	\item \begin{enumerate}[label=\alph*)]
-			\item La iteración principal sobre $k$ puede ser paralelizada implementando la paralelización de la multiplicación matvec entre $A$ y $b_k$. Una vez obtenido este vector se puede paralelizar el cálculo de $b_k^Tb_k$
-			\item La multiplicación matriz-vector (matvec) puede ser paralelizada particionando la matriz $A$ en submatrices asociadas a un solo proceso y particionando tanto el vector $b_k$ como el vector que almacenará el resultado de esta multiplicación en subvectores. De esta forma, la cantidad de procesos viene dada por $p = rc$, donde $r$ y $c$ son las cantidades de filas y columnas respectivamente que tendrá cada submatriz $A_{ij}$. 
-			\item
-	\end{enumerate}
+			\item La iteración principal sobre $k$ puede ser paralelizada implementando la paralelización de la multiplicación matvec entre $A$ y $b_k$. La partición de $A$ que se implementará en esta entrega consiste en utilizar solo los primeros $\floor{\frac{n}{\sqrt{P}}}^2$ procesos de los $P$ que hay disponibles (Asumiendo que $P < n$, es razonable considerar que en otro escenario basta utilizar un solo proceso) 
+
+			Una vez obtenido este vector se puede paralelizar el cálculo de $b_k^Tb_k$ como se explica en la parte b)
+		\item La multiplicación matriz-vector (matvec) puede ser paralelizada particionando la matriz $A$ en submatrices asociadas a un solo proceso y particionando tanto el vector $b_k$ como el vector $y$ que almacenará el resultado de esta multiplicación en subvectores. La partición de $A$ que se implementará en esta entrega consiste en utilizar solo los primeros $\floor{\sqrt{P}}^2$ procesos de los $P$ que hay disponibles, de esta forma, particionamos el problema $Ab_k = y$ de la siguiente forma
+			\begin{align*}
+				A = \begin{bmatrix}
+					A_{00} & \cdots & A_{0,c-1} \\
+					\vdots & \ddots & \vdots \\
+					A_{r-1,0}   & \cdots & A_{r-1,c-1}
+				\end{bmatrix} && b_k=\begin{bmatrix}
+					x_0 \\ \vdots \\ x_{c-1}
+				\end{bmatrix}
+				&& y = \begin{bmatrix}
+					y_0 \\ \vdots \\ y_{r-1}
+				\end{bmatrix}
+			\end{align*}
+			Tal que $A_{ij} \in \R^{n_{i}\times n_{j}}$, $x_i \in \R^{n_i}$ e $y_i \in \R^{n_i}$ en donde los $n_i$ vienen definidos para $i=0,\dots,\floor{\sqrt{P}}-1$ por
+			\[
+				n_i = \begin{cases}
+					\floor{\frac{n}{\floor{\sqrt{P}}}} & \text{si } i < \floor{\sqrt{P}} - 1 \\
+					\ \\
+					\floor{\frac{n}{\floor{\sqrt{P}}}} + n \text{ mod } \floor{\sqrt{P}} & \text{si } i = \floor{\sqrt{P}} - 1
+				\end{cases}
+
+
+				De esta forma, la cantidad de procesos viene dada por $p = rc$, donde $r$ y $c$ son las cantidades de filas y columnas respectivamente que tendrá cada submatriz $A_{ij}$.
+			\item Dados dos vectores $\textbf{x},\textbf{y} \in \R^n$, podemos paralelizar su producto sobre $P$ procesos asignando a cada proceso $p_i$ $\floor{n/p}$ filas para $i=0,\dots,P-2$ y $n \text{ mod } p$ filas para $p_{P-1}$. El procedimiento desde aquí es como sigue:
+				\begin{itemize}
+					\item Cada $p_i$ calcula
+						\[s_i = \sum_{k=n_{i}}^{n_{i+1} - 1}x_ky_k\]
+						Donde $n_i$ es el índice de la primera fila asignada a $p_i$. Se puede definir este valor con la expresión
+						\[
+							n_i = \begin{cases}
+								i\floor{\frac{n}{P}} & \text{si } i=0,\dots,P-2 \\
+								P & \text{si } i=P
+							\end{cases}
+						\]
+					\item Para $i>0$, cada $p_i$ envía $s_i$ a $p_0$
+					\item $p_0$ calcula la suma
+						\[
+							s = s_0 + \cdots + s_{P-1} = \textbf{x}\cdot\textbf{y}
+						\]
+					
+				\end{itemize}
+	\end{enumerate} 
 	\item
 	\item
 	\item 

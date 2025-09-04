@@ -19,9 +19,9 @@ def write_matrix(matrix, filename='matrix.txt'):
         f.write(str(mat.shape[0])+"\n"+str(mat.shape[1])+"\n")
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
-                f.write(str(mat[i,j])+"\n")
+                f.write(str(matrix[i,j])+"\n")
         f.write("end")
 
-ndim = 1000
+ndim = 5
 mat = generate_matrix(ndim)
 write_matrix(mat)
