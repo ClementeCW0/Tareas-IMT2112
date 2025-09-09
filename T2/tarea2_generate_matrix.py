@@ -8,11 +8,11 @@
 import numpy as np
 
 def generate_matrix(dim, seed=0):
-    rng = np.random.default_rng(seed)
 
     # Unscipyfication of the code (the cluster doesn't have scipy)
+    np.random.seed(seed)
     # Random Gaussian matrix
-    X = rng.normal(size=(dim, dim))
+    X = np.random.normal(size=(dim, dim))
     # QR decomposition
     Q, R = np.linalg.qr(X)
     # Fix sign ambiguity so Q is uniformly distributed over O(n)
@@ -20,8 +20,6 @@ def generate_matrix(dim, seed=0):
     # Eigenvalues from 1 to 10
     b = np.linspace(1., 10., dim)
     # Construct symmetric matrix
-
-
 
     #from scipy.stats import ortho_group
     #from scipy.sparse import spdiags
