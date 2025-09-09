@@ -5,6 +5,7 @@
 // Read a matrix from a text file and store specific lines in an array.
 
 #include <iostream>
+#include <cmath>
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
@@ -14,77 +15,37 @@ using namespace std;
 //double matrix_dimensions(ifstream* file)
 //{
 //}
-int* submatrix(ifstream* file, int nrows, int ncols, int my_firstrow, int my_nrows, int rank)
+double* submatrix(ifstream* file, int nrows, int ncols, int my_firstrow, int my_nrows, int rank)
 {
-    //int nrows, ncols;
-    int *my_matrix;
-    int tmp;
-
-    //ifstream file;
-
-    //file.open("matrix.txt");
-
-    //if (*file.is_open())
-    //{
-        //*file >> nrows;
-        //cout << "Number of rows: " << nrows << endl;
-
-        //*file >> ncols;
-        //cout << "Number of columns: " << ncols << endl;
-
-        //int my_firstrow = 2;
-        //int my_nrows = 3;
-        //cout << "Rank " << rank << " " << "Read " << my_nrows << " rows starting from row " << my_firstrow << endl;
-
-        my_matrix = new int[my_nrows * ncols];
+    double *my_matrix;
+    double tmp;
+        my_matrix = new double[my_nrows * ncols];
 
         for (int i=0; i<(my_firstrow)*ncols; i++) {
             *file >> tmp;
             //cout << "Rank " << rank << " " << "skipped: " << tmp << endl;
         }
-
         //cout << "Rank " << rank << " " << "Store matrix elements" << endl;
         for (int i=0; i<my_nrows*ncols; i++) {
             *file >> my_matrix[i];
             //cout << "Rank " << rank << " " << i << " " << my_matrix[i] << endl;
         }
-
-        //*file.close();
-    //}
-    //else
-    //{
-    //    cout << "Unable to open file." << endl;
-    //}
 	return my_matrix;
-}
-	int* partial_matvec(int* mat, int* vec, int rows, int cols, int rank){
-		cout << "Rank " << rank << ": " << sizeof(vec)/sizeof(int) << " " << cols << endl;
-		int* result;
-		//if (size(vec) == cols ) {
-        		result = (int*)malloc(sizeof(int) * rows);
-			for (int r = 0; r < rows; r++){
-				for (int c = 0; c < cols; c++){
-					result[r] += mat[r * cols + c] * vec[c];
-				}
-			}
-		//}
-		//else {
-		//	throw invalid_argument("Invalid mat-vec multiplication");
-		//}
-		return result;
-
 }
 
 int main(){
 	MPI_Init(NULL,NULL);
-	int world_size, world_rank;
+	int world_size, world_rank, proc_len;
+	char proc_name[MPI_MAX_PROCESSOR_NAME];
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+	MPI_Get_processor_name(proc_name, &proc_len);
+	cout << "Process " << world_rank << " uses processor " << proc_name << endl;
 
     	ifstream file;
 
     	file.open("matrix.txt");
-	int *A_ij;
+	double* A_ij;
 	int nrows, ncols, allgthr_count[world_size], allgthr_displacement[world_size];
 	int my_firstrow, my_nrows;
     	if (file.is_open()){
@@ -122,33 +83,57 @@ int main(){
 		return 1;
     	}
 
-	int* b;
-        b = (int*)malloc(sizeof(int) * my_nrows);
+	double* local_b = new double[my_nrows];
+	double* full_b = new double[ncols];
 	for (int i = 0; i < my_nrows; i++){
-		b[i] = 1;
+		local_b[i] = 1;
 	}
-	int n_iterations = 3;
+	int n_iterations = 3000;
 	// MAIN ITERATION LOOP:
 	for (int k = 0; k < n_iterations; k++){
 		//cout << "Iteration: " << k << endl;
-		int buffer[ncols];
-
-		MPI_Allgatherv(b, my_nrows, MPI_INT, buffer, allgthr_count, allgthr_displacement, MPI_INT, MPI_COMM_WORLD);
-		cout << "Iteration " << k << ": " << " My rank: " << world_rank << endl;
+		MPI_Allgatherv(local_b, my_nrows, MPI_DOUBLE, full_b, allgthr_count, allgthr_displacement, MPI_DOUBLE, MPI_COMM_WORLD);
+		//cout << "Iteration " << k << ": " << " My rank: " << world_rank << endl;
 		for (int c = 0; c < ncols; c++){
-			cout << buffer[c] << endl;;
+			//cout << "(" << k << ", " << world_rank << ", " << c << ") " << full_b[c] << endl;;
 		}
 
-		//b = partial_matvec(A_ij, buffer, my_nrows, ncols, world_rank);
-        	b = (int*)calloc(my_nrows, sizeof(int));
+		// Compute local matvec in each process
+        	double* new_b = new double[my_nrows]();
 		for (int r = 0; r < my_nrows; r++){
 			for (int c = 0; c < ncols; c++){
-      				b[r] += A_ij[r * ncols + c] * buffer[c];
+      				new_b[r] += A_ij[r * ncols + c] * full_b[c];
       			}
 		}
+		//Compute local module of Ab doing
+		double local_mod = 0;
+		for (int i = 0; i < my_nrows; i++){
+			local_mod += new_b[i] * new_b[i];
+		}
+		double full_mod = 0;
+		MPI_Allreduce(&local_mod, &full_mod, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		
+		// Compute the local summand of the eigenvalue approximation
+		double local_eigen_max = 0;
+		for (int i = 0; i < my_nrows; i++){
+			local_eigen_max += new_b[i] * local_b[i];
+		}
+		double full_eigen_max = 0;
+		MPI_Reduce(&local_eigen_max, &full_eigen_max, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+		if (world_rank == 0 && k % 100 == 0){
+			cout << full_eigen_max << endl;
+		}
+
+		// Update local value
+		for (int i = 0; i < my_nrows; i++){
+			local_b[i] = new_b[i] / sqrt(full_mod);
+		}
+		delete[] new_b;
+
 	}
-	delete[] b;
 	delete[] A_ij;
+	delete[] local_b;
+	delete[] full_b;
 	MPI_Finalize();
 	return 0;
 }
