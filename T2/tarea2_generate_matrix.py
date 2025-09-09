@@ -7,12 +7,28 @@
 
 import numpy as np
 
-def generate_matrix(dim):
-    from scipy.stats import ortho_group
-    from scipy.sparse import spdiags
-    a = ortho_group.rvs(dim, random_state=0)
+def generate_matrix(dim, seed=0):
+    rng = np.random.default_rng(seed)
+
+    # Unscipyfication of the code (the cluster doesn't have scipy)
+    # Random Gaussian matrix
+    X = rng.normal(size=(dim, dim))
+    # QR decomposition
+    Q, R = np.linalg.qr(X)
+    # Fix sign ambiguity so Q is uniformly distributed over O(n)
+    Q *= np.sign(np.diag(R))
+    # Eigenvalues from 1 to 10
     b = np.linspace(1., 10., dim)
-    return a @ spdiags(b, 0, dim, dim) @ a.T
+    # Construct symmetric matrix
+
+
+
+    #from scipy.stats import ortho_group
+    #from scipy.sparse import spdiags
+    #a = ortho_group.rvs(dim, random_state=0)
+    #b = np.linspace(1., 10., dim)
+    #return a @ spdiags(b, 0, dim, dim) @ a.T
+    return Q @ np.diag(b) @ Q.T
 
 def write_matrix(matrix, filename='matrix.txt'):
     with open(filename, 'w') as f:
@@ -22,6 +38,6 @@ def write_matrix(matrix, filename='matrix.txt'):
                 f.write(str(matrix[i,j])+"\n")
         f.write("end")
 
-ndim = 10000
+ndim = 1000
 mat = generate_matrix(ndim)
 write_matrix(mat)
