@@ -13,8 +13,9 @@
 echo "start script"
 date
 
-which python3
-time python3 tarea2_generate_matrix.py
+which python
+pytohn --version
+time python tarea2_generate_matrix.py
 
 echo "end script"
 date
