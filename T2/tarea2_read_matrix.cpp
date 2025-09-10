@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
+#include <chrono>
 #include <mpi.h>
 using namespace std;
 
@@ -34,6 +35,8 @@ double* submatrix(ifstream* file, int nrows, int ncols, int my_firstrow, int my_
 }
 
 int main(){
+	using chrono::high_resolution_clock;
+
 	MPI_Init(NULL,NULL);
 	int world_size, world_rank, proc_len;
 	char proc_name[MPI_MAX_PROCESSOR_NAME];
