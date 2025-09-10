@@ -4,6 +4,7 @@
 
 // Read a matrix from a text file and store specific lines in an array.
 
+#include <ios>
 #include <iostream>
 #include <cmath>
 #include <fstream>
@@ -35,15 +36,15 @@ double* submatrix(ifstream* file, int nrows, int ncols, int my_firstrow, int my_
 }
 
 int main(){
-	using chrono::high_resolution_clock;
-
+	//using chrono::high_resolution_clock;
+	const auto start = chrono::high_resolution_clock::now();
 	MPI_Init(NULL,NULL);
 	int world_size, world_rank, proc_len;
 	char proc_name[MPI_MAX_PROCESSOR_NAME];
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	MPI_Get_processor_name(proc_name, &proc_len);
-	cout << "Process " << world_rank << " uses processor " << proc_name << endl;
+	//cout << "Process " << world_rank << " uses processor " << proc_name << endl;
 
     	ifstream file;
 
@@ -91,8 +92,9 @@ int main(){
 	for (int i = 0; i < my_nrows; i++){
 		local_b[i] = 1;
 	}
-	int n_iterations = 3000;
+	int n_iterations = 1000;
 	// MAIN ITERATION LOOP:
+	double full_eigen_max;
 	for (int k = 0; k < n_iterations; k++){
 		//cout << "Iteration: " << k << endl;
 		MPI_Allgatherv(local_b, my_nrows, MPI_DOUBLE, full_b, allgthr_count, allgthr_displacement, MPI_DOUBLE, MPI_COMM_WORLD);
@@ -121,10 +123,10 @@ int main(){
 		for (int i = 0; i < my_nrows; i++){
 			local_eigen_max += new_b[i] * local_b[i];
 		}
-		double full_eigen_max = 0;
+		full_eigen_max = 0;
 		MPI_Reduce(&local_eigen_max, &full_eigen_max, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 		if (world_rank == 0 && k % 100 == 0){
-			cout << full_eigen_max << endl;
+			//cout << full_eigen_max << endl;
 		}
 
 		// Update local value
@@ -137,6 +139,17 @@ int main(){
 	delete[] A_ij;
 	delete[] local_b;
 	delete[] full_b;
+	const auto end = chrono::high_resolution_clock::now();
+  	const chrono::duration<double> total_time = end - start;
+	if (world_rank == 0){
+		ofstream data;
+		data.open("data.txt", ios::app);
+		data << world_size << ", " << full_eigen_max << ", " << total_time.count() << endl;
+
+		//cout << "RESULTS:\n" << world_size << ": " << full_eigen_max << ", " << total_time.count() << endl; 
+		data.close();
+	}
 	MPI_Finalize();
+
 	return 0;
 }
