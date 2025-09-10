@@ -13,9 +13,9 @@
 echo "start script"
 date
 mpic++ -std=c++11 tarea2_read_matrix.cpp
-for p in {1..5}
+for i in {1..5}
 do
-	mpirun -np &p ./a.out
+	mpirun -np &i ./a.out
 done
 echo "end script"
 date
