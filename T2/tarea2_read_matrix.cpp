@@ -8,15 +8,10 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
-#include <iterator>
-#include <stdexcept>
 #include <chrono>
 #include <mpi.h>
 using namespace std;
 
-//double matrix_dimensions(ifstream* file)
-//{
-//}
 double* submatrix(ifstream* file, int nrows, int ncols, int my_firstrow, int my_nrows, int rank)
 {
     double *my_matrix;
@@ -36,7 +31,6 @@ double* submatrix(ifstream* file, int nrows, int ncols, int my_firstrow, int my_
 }
 
 int main(){
-	//using chrono::high_resolution_clock;
 	const auto start = chrono::high_resolution_clock::now();
 	MPI_Init(NULL,NULL);
 	int world_size, world_rank, proc_len;
@@ -44,7 +38,13 @@ int main(){
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	MPI_Get_processor_name(proc_name, &proc_len);
-	//cout << "Process " << world_rank << " uses processor " << proc_name << endl;
+
+	
+	ofstream proc_names;
+	proc_names.open("proc_names.txt", ios::app);
+	proc_names << world_rank << ", " << proc_name << endl;
+	proc_names.close();
+
 
     	ifstream file;
 
