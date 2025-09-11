@@ -3,19 +3,20 @@
 # Nombre del trabajo
 #SBATCH --job-name=IMT2112
 # Archivo de salida
-#SBATCH --output=data.txt
+#SBATCH --output=logs/output_%j.txt
 # Cola de trabajo
 #SBATCH --partition=full
 # Solicitud de cpus
-#SBATCH --ntasks=8
+#SBATCH --ntasks=32
 #SBATCH --cpus-per-task=1
 
 echo "start script"
 date
 mpic++ -std=c++11 tarea2_read_matrix.cpp
-for i in {1..5}
+for i in {1..32}
 do
-	mpirun -np &i ./a.out
+	echo "processors: $i"
+	mpirun -np $i ./a.out
 done
 echo "end script"
 date

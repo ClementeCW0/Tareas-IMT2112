@@ -36,6 +36,6 @@ def write_matrix(matrix, filename='matrix.txt'):
                 f.write(str(matrix[i,j])+"\n")
         f.write("end")
 
-ndim = 1000
+ndim = 5000
 mat = generate_matrix(ndim)
 write_matrix(mat)
