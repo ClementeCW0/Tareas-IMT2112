@@ -24,6 +24,7 @@
 					\ \\
 					\floor{\frac{n}{\floor{\sqrt{P}}}} + n \text{ mod } \floor{\sqrt{P}} & \text{si } i = \floor{\sqrt{P}} - 1
 				\end{cases}
+			\]
 
 
 				De esta forma, la cantidad de procesos viene dada por $p = rc$, donde $r$ y $c$ son las cantidades de filas y columnas respectivamente que tendrá cada submatriz $A_{ij}$.
@@ -43,14 +44,26 @@
 						\[
 							s = s_0 + \cdots + s_{P-1} = \textbf{x}\cdot\textbf{y}
 						\]
-					
 				\end{itemize}
-	\end{enumerate} 
-	\item
-	\item
-	\item 
+		\end{enumerate} 
 	\item
 	\item
 	\item
 	\item
+	\item
+	\item
+	\item \begin{enumerate}[label=\alph*)]
+			\item Se utilizó el archivo \texttt{submit\_cpp.sh} (adjunto en la entrega) y se obtuvo el siguiente output al correr \texttt{squeue -u clemente.wacquez}:
+				\begin{verbatim}
+	 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+497135      full  IMT2112 clemente  R       5:03      1 n14
+					
+				\end{verbatim}
+			\item
+			\item
+			\item
+			\item
+			\item
+		
+	\end{enumerate}
 \end{enumerate}
