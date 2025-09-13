@@ -6,6 +6,7 @@
 # range and store the matrix in a text file.
 
 import numpy as np
+import sys
 
 def generate_matrix(dim, seed=0):
 
@@ -26,7 +27,7 @@ def generate_matrix(dim, seed=0):
     #a = ortho_group.rvs(dim, random_state=0)
     #b = np.linspace(1., 10., dim)
     #return a @ spdiags(b, 0, dim, dim) @ a.T
-    return Q @ np.diag(b) @ Q.T
+    return np.dot(np.dot(Q, np.diag(b)), Q.T)
 
 def write_matrix(matrix, filename='matrix.txt'):
     with open(filename, 'w') as f:
@@ -36,6 +37,6 @@ def write_matrix(matrix, filename='matrix.txt'):
                 f.write(str(matrix[i,j])+"\n")
         f.write("end")
 
-ndim = 5000
+ndim = int(sys.argv[1])
 mat = generate_matrix(ndim)
 write_matrix(mat)
