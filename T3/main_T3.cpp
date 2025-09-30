@@ -33,27 +33,29 @@ float tidy_alpha(int i, int j, int n, int k){
 		break;
 
 		case 4: // CENTRO
-		return - n * n * (alpha((i - 0.5) / n, j / n) + alpha((i + 0.5) / n, j / n))
+		return - n * n * (
+				  alpha((i - 0.5) / n, j / n) + \
+				  alpha((i + 0.5) / n, j / n) + \
+				  alpha(i / n, (j + 0.5) / n) + \
+				  alpha(i / n, (j - 0.5) / n) + \
+				 ) + 1
 		break;
 
 
 	}
 }
-float* get_stencil(int num_dividions) {
+float* get_stencil(int num_dividionvs) {
 	// Se asume que el stencil es de cruz con 5 elementos. Se creará un arreglo de tamaño
 	// 5 * num_divisoins \times num_divisions que representará los cinco arreglos del stencil
 	// en el orden [N S E W C]
 	float* stencil = (float*) calloc(5 * num_dividions * num_dividions, sizeof(float));
 	for (int k = 0; k < 5; k++){
-		switch (k) {
-			case 0:
-			for (int i = 0; i < num_dividions; i++){
-				for (int j = 0; j < num_dividions; j++){
-					stencil[
-				}
-			}
+		for (int i = 0; i < num_dividionvs; i++){
+			for (int j = 0; j < num_dividionvs; j++)
+
 		}
-      }
+	}
+
 
 
 	return stencil;
