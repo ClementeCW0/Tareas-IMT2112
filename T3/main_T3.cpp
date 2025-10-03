@@ -37,11 +37,11 @@ float tidy_alpha(int i, int j, int nx, int ny, int k){
 
 		case 4: // CENTRO
 			result =  - nx * ny * (
-					  alpha((i - 0.5) / (float) nx, j / (float) ny) + \
-					  alpha((i + 0.5) / (float) nx, j / (float) ny) + \
-					  alpha(i / (float) nx, (j + 0.5) / (float) ny) + \
-					  alpha(i / (float) nx, (j - 0.5) / (float) ny)
-					 ) + 1;
+				  alpha((i - 0.5) / (float) nx, j / (float) ny) + \
+				  alpha((i + 0.5) / (float) nx, j / (float) ny) + \
+				  alpha(i / (float) nx, (j + 0.5) / (float) ny) + \
+				  alpha(i / (float) nx, (j - 0.5) / (float) ny)
+				 ) + 1;
 		break;
 		case 5:
 			if (i == 0 || i == nx - 1 || j == 0 || j == ny - 1){
@@ -49,6 +49,7 @@ float tidy_alpha(int i, int j, int nx, int ny, int k){
 			} else {
 				result = f((float) i / (float) nx, (float) j / (float) ny);
 			}
+		break;
 	}
 	return result;
 }
