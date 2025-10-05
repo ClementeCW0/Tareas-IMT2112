@@ -21,35 +21,31 @@ float tidy_alpha(int i, int j, int nx, int ny, int k){
 	switch (k) {
 		case 0: // NORTE
 			result =  - nx * ny * alpha(i / (float) nx, (j + 0.5) / (float) ny);
-		break;
+			break;
 
 		case 1: // SUR
 			result =  - nx * ny * alpha(i / (float) nx, (j - 0.5) / (float) ny);
-		break;
+			break;
 
 		case 2: // ESTE
 			result =  - nx * ny * alpha((i + 0.5) / (float) nx, j / (float) ny);
-		break;
+			break;
 
 		case 3: // OESTE
 			result =  - nx * ny * alpha((i - 0.5) / (float) nx, j / (float) ny);
-		break;
+			break;
 
 		case 4: // CENTRO
-			result =  - nx * ny * (
+			result =  nx * ny * (
 				  alpha((i - 0.5) / (float) nx, j / (float) ny) + \
 				  alpha((i + 0.5) / (float) nx, j / (float) ny) + \
 				  alpha(i / (float) nx, (j + 0.5) / (float) ny) + \
 				  alpha(i / (float) nx, (j - 0.5) / (float) ny)
 				 ) + 1;
-		break;
+			break;
 		case 5:
-			if (i == 0 || i == nx - 1 || j == 0 || j == ny - 1){
-				result = 0;
-			} else {
-				result = f((float) i / (float) nx, (float) j / (float) ny);
-			}
-		break;
+			result = f((float) i / (float) nx, (float) j / (float) ny);
+			break;
 	}
 	return result;
 }
@@ -71,22 +67,25 @@ float* sparse_matvec(int Nx, int Ny, float* stencil, float* vec) {
 	// Implementado solo para stencils de cruz con 5 elementos. el parámetro n corresponde a
 	// Nx \times Ny
 	float* result = (float*) calloc(Nx * Ny, sizeof(float));
-	// Debemos ajustar el stencil según el lugar de la grilla en la que nos encontramos
-	float N, S, E, W, C; // El valor `C` se ocupa para las condiciones borde
+	float N, S, E, W, C; 
 	for (int i = 0; i < Nx; i++) {
 		for (int j = 0; j < Ny; j++){
-		//// Condiciones de forntera//////////////////
-		if (i == 0 || i == Nx - 1 || j == 0 || j == Ny - 1){
-			C = 1; N = 0; S = 0; E = 0; W = 0;
-		} else {
-			N = stencil[Nx * i + j] * vec[Nx * (i - 1) + j];
-			S = stencil[Nx * Ny + Nx * i + j] * vec[Nx * (i + 1) + j];
-			E = stencil[2 * Nx * Ny + Nx * i + j] * vec[Nx * i + j + 1];
-			W = stencil[3 * Nx * Ny + Nx * i + j] * vec[Nx * i + j - 1];
+			N = 0; S = 0; E = 0; W = 0;
+			// Debemos ajustar el stencil según el lugar de la grilla en la que nos encontramos
+			if (i != 0){
+				W = stencil[3 * Nx * Ny + Nx * i + j] * vec[Nx * i + j - 1];
+			}
+			if (i != Nx - 1){
+				E = stencil[2 * Nx * Ny + Nx * i + j] * vec[Nx * i + j + 1];
+			}
+			if (j != 0){
+				N = stencil[Nx * i + j] * vec[Nx * (i - 1) + j];
+			}
+			if (j != Ny - 1){
+				S = stencil[Nx * Ny + Nx * i + j] * vec[Nx * (i + 1) + j];
+			}
 			C = stencil[4 * Nx * Ny + Nx * i + j] * vec[Nx * i + j];
-		}
-		////////////////////////////////////////////////
-		result[Nx * i + j] = N + S + E + W + C;
+			result[Nx * i + j] = N + S + E + W + C;
 		}
 	}
 	return result;
@@ -145,8 +144,9 @@ int main(){
 			}
 		}
 		float* new_q = sparse_matvec(Nx, Ny, stencil, p);
-		free(q);
-		q = new_q;
+		//free(q);
+		for (int k = 0; k < g_size; k++)
+			q[k] = new_q[k];
 		delta = rho / dot(p, q, g_size);
 		//cout << "delta: " << delta << "\n";
 		for (int k = 0; k < g_size; k++) {
