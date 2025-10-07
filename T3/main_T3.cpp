@@ -56,32 +56,33 @@ float* get_stencil(int Nx, int Ny) {
 	for (int k = 0; k < 6; k++){
 		for (int i = 0; i < Nx; i++){
 			for (int j = 0; j < Ny; j++){
+				if (isnan(tidy_alpha(i, j, Nx, Ny, k))){
+					cout << "stencil: " << "(" << i << ", " << j << ") " << tidy_alpha(i, j, Nx, Ny, k) << "\n";
+				}
 				stencil[k * Nx * Ny + Nx * i + j] = tidy_alpha(i, j, Nx, Ny, k);
-				//cout << "stencil: " << tidy_alpha(i, j, Nx, Ny, k) << "\n";
 			}
 		}
 	}
 	return stencil;
 }
 float* sparse_matvec(int Nx, int Ny, float* stencil, float* vec) {
-	// Implementado solo para stencils de cruz con 5 elementos. el parámetro n corresponde a
-	// Nx \times Ny
+	// Implementado solo para stencils de cruz con 5 elementos
 	float* result = (float*) calloc(Nx * Ny, sizeof(float));
 	float N, S, E, W, C; 
 	for (int i = 0; i < Nx; i++) {
 		for (int j = 0; j < Ny; j++){
 			N = 0; S = 0; E = 0; W = 0;
 			// Debemos ajustar el stencil según el lugar de la grilla en la que nos encontramos
-			if (i != 0){
+			if (j != 0){
 				W = stencil[3 * Nx * Ny + Nx * i + j] * vec[Nx * i + j - 1];
 			}
-			if (i != Nx - 1){
+			if (j != Nx - 1){
 				E = stencil[2 * Nx * Ny + Nx * i + j] * vec[Nx * i + j + 1];
 			}
-			if (j != 0){
+			if (i != 0){
 				N = stencil[Nx * i + j] * vec[Nx * (i - 1) + j];
 			}
-			if (j != Ny - 1){
+			if (i != Ny - 1){
 				S = stencil[Nx * Ny + Nx * i + j] * vec[Nx * (i + 1) + j];
 			}
 			C = stencil[4 * Nx * Ny + Nx * i + j] * vec[Nx * i + j];
@@ -110,11 +111,16 @@ int main(){
 	float* stencil = get_stencil(Nx, Ny);
 	int g_size = Nx * Ny; // grid size
 	float* x = (float*) calloc(g_size, sizeof(float));
+	// Si x es el vector 0, el valor de delta queda indefinido en la primera iteración
+	// dado que b es el vector 0.
+	//for (int i = 0; i < g_size; i++){
+	//	x[i] = 1.0f;
+	//}
 	float* p = (float*) calloc(g_size, sizeof(float));
 	float* q = (float*) calloc(g_size, sizeof(float));
 	float* r = (float*) calloc(g_size, sizeof(float));
-	float rho, new_rho, beta, delta;
 	r = sparse_matvec(Nx, Ny, stencil, x);
+	float rho, new_rho, beta, delta;
 	float* b = (float*) calloc(g_size, sizeof(float));
 	for (int i = 0; i < Nx; i++){
 		for (int j = 0; j < Ny; j++){
@@ -122,33 +128,59 @@ int main(){
 		}
 	}
 	for (int k = 0; k < g_size; k++){
+		if (isnan(r[k])){
+			cout << "nan r entry: " << k << "\n";
+		}
+		if (isnan(b[k])){
+			cout << "nan b entry: " << k << "\n";
+		}
 		r[k] = r[k] - b[k];
-		//cout << r[k] << "\n";
+		if (isnan(r[k])){
+			cout << "nan r entry: " << k << "\n";
+		}
 	}
 
 	ofstream xdata;
 	xdata.open("iteration_data.csv");
-	// MAIN LOOP
+	///////// MAIN LOOP /////////////////////////////
 	for (int i = 1; i < max_iterations + 1; i++){
+		cout << "--------ITERATION " << i << "----------\n";
 		new_rho = dot(r, r, g_size);
-		//cout << "rho: " << new_rho << "\n";
+		if (isnan(new_rho)) {
+			cout << "nan rho\n";
+		} else {
+			cout << "rho: " << new_rho << "\n";
+		}
 		if (i == 1){
 			for (int k = 0; k < g_size; k++){
 				p[k] = r[k];
+				if (isnan(p[k])){
+					cout << "nan p entry: " << k << "\n"; 
+				}
 			}
 			rho = new_rho;
 		} else {
 			beta = new_rho/rho;
+			if (isnan(beta)){
+				cout << "nan beta: " << "(" << i << ") " << "\n";
+			}
+			float p_check = 0;
 			for (int k = 0; k < g_size; k++){
 				p[k] = r[k] + beta * p[k];
+				if (isnan(p[k])) {
+					//cout << "nan p entry: " << k << "\n";
+					p_check += 1;
+				}
 			}
+			cout << "nan in p: " << p_check / (float) g_size << "\n";
 		}
 		float* new_q = sparse_matvec(Nx, Ny, stencil, p);
 		//free(q);
-		for (int k = 0; k < g_size; k++)
+		for (int k = 0; k < g_size; k++) {
 			q[k] = new_q[k];
+		}
 		delta = rho / dot(p, q, g_size);
-		//cout << "delta: " << delta << "\n";
+		cout << "delta: " << delta << "\n";
 		for (int k = 0; k < g_size; k++) {
 			x[k] = x[k] - delta * p[k];
 			xdata << x[k] << ",";
