@@ -1,0 +1,30 @@
+\begin{enumerate}[label=\bf\arabic*.]
+	\item 
+	\item Para almacenar el vector $\textbf{x}$ en formato de stencil, debemos asignarle una entrada en el vector a cada punto de la grilla $N_x\times N_y$. Por esto, el vector $\textbf{x}$ pertenece a $\R^{N_x\cdot N_y}$ tal que la $(N_xj + i)-$ésima entrada viene dada por la aproximación de \textbf{u} en el punto $\pa{\frac{i}{N_y}, \frac{j}{N_x} }$. Es decir,
+		\[
+			x_{N_xj + i} = u_{ij}
+		\]
+		De esta forma, el stencil asociado a $\textbf{x}$ viene dado por
+		\[
+			\begin{bmatrix}
+				& \textbf{x}_{N_x(j+1)+i} & \\
+				\textbf{x}_{N_xj + i - 1} & \textbf{x}_{N_xj + i} & \textbf{x}_{N_xj + i + 1} \\
+				& \textbf{x}_{N_x(j - 1) + i} &
+			\end{bmatrix} \equiv
+			\begin{bmatrix}
+				& \textbf{u}_{i,j+1} & \\
+				\textbf{u}_{i-1,j} & \textbf{u}_{i,j} & \textbf{u}_{i + 1} \\
+				& \textbf{u}_{i,j-1} &
+			\end{bmatrix}
+		\]
+		Considerando la $(i,j)-$ésima celda contando desde la esquina inferior izquierda de $(0,1)^2$.
+
+		Por otra parte, para almacenar la matriz $A$ en formato stencil, creamos 5 erreglos de $N_x\times N_y$, $N, S, E, W$ y $C$. tales que 
+	\item
+	\item
+	\item
+	\item
+	\item
+	\item
+\end{enumerate}
+
