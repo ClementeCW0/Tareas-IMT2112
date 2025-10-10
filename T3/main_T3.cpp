@@ -64,7 +64,7 @@ double* get_stencil(int Nx, int Ny) {
 	for (int k = 0; k < 6; k++){
 		// Es mejor paralelizar el loop interior, dado que el primer loop itera solo sobre
 		// 6 elementos.
-		#pragma omp parallel for schedule(static)
+		//#pragma omp parallel for schedule(static)
 		for (int j = 0; j < Nx; j++){
 			for (int i = 0; i < Ny; i++){
 				stencil[k * Nx * Ny + Nx * j + i] = tidy_alpha(i, j, Nx, Ny, k);
@@ -102,7 +102,6 @@ void sparse_matvec(int Nx, int Ny, double* stencil, double* vec, double* recv) {
 
 double dot(double* vec1, double* vec2, int size){
 	double result = 0;
-	//#pragma omp parallel for reduction(+:result)
 	#pragma omp parallel for reduction(+:result) schedule(static)
 	for (int i = 0; i < size; i++){
 		result += vec1[i] * vec2[i];
@@ -139,6 +138,7 @@ int main(){
 	sparse_matvec(Nx, Ny, stencil, x, r);
 	double rho, new_rho, beta, delta;
 	double* b = (double*) calloc(g_size, sizeof(double));
+
 	#pragma omp parallel for schedule(static)
 	for (int j = 0; j < Nx; j++){
 		for (int i = 0; i < Ny; i++){
@@ -170,12 +170,12 @@ int main(){
 		}
 		sparse_matvec(Nx, Ny, stencil, p, q);
 		delta = new_rho / dot(p, q, g_size);
-		#pragma omp parallel for schedule(static)
+		//#pragma omp parallel for schedule(static)
 		for (int k = 0; k < g_size; k++) {
 			x[k] = x[k] - delta * p[k];	
 		}
 
-		#pragma omp parallel for schedule(static)
+		//#pragma omp parallel for schedule(static)
 		for (int k = 0; k < g_size; k++) {
 			r[k] = r[k] - delta * q[k];
 		}
