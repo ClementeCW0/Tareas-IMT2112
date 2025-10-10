@@ -8,16 +8,16 @@ with open("data") as data_file:
     Ny = int(data_file.readline())
 
 count = 1
-row = df.iloc[-1]
-x = np.linspace(0,1,Nx)
-y = np.linspace(0,1,Ny)
-X, Y = np.meshgrid(y, x)
-Z = np.array(row[:-1]).reshape(Nx, Ny)
-
-ax = plt.figure().add_subplot(projection='3d')
-ax.plot_surface(X, Y, Z, cmap='viridis')
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_zlabel("z")
-plt.show()
+for row in [df.iloc[i] for i in [0, 10, -1]]:
+    x = np.linspace(0,1,Nx)
+    y = np.linspace(0,1,Ny)
+    X, Y = np.meshgrid(y, x)
+    Z = np.array(row[:-1]).reshape(Nx, Ny)
+    
+    ax = plt.figure().add_subplot(projection='3d')
+    ax.plot_surface(X, Y, Z, cmap='viridis')
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
+    ax.set_zlabel("z")
+    plt.show()
 
