@@ -61,12 +61,10 @@ double* get_stencil(int Nx, int Ny) {
 	// Se creará un arreglo de tamaño 6 * Nx \times Ny que representará los cinco
 	// arreglos del stencil en el orden [N S E W C] junto con el vector b al final.
 	double* stencil = (double*) calloc(6 * Nx * Ny, sizeof(double));
+	#pragma omp parallel for collapse(3) schedule(static)
 	for (int k = 0; k < 6; k++){
-		// Es mejor paralelizar el loop interior, dado que el primer loop itera solo sobre
-		// 6 elementos.
-		//#pragma omp parallel for schedule(static)
-		for (int j = 0; j < Nx; j++){
-			for (int i = 0; i < Ny; i++){
+		for (int j = 0; j < Ny; j++){
+			for (int i = 0; i < Nx; i++){
 				stencil[k * Nx * Ny + Nx * j + i] = tidy_alpha(i, j, Nx, Ny, k);
 			}
 		}
@@ -76,10 +74,10 @@ double* get_stencil(int Nx, int Ny) {
 
 void sparse_matvec(int Nx, int Ny, double* stencil, double* vec, double* recv) {
 	// Implementado solo para stencils de cruz con 5 elementos
-	#pragma omp parallel for schedule(static)
+	#pragma omp parallel for collapse(2) schedule(static)
 	for (int j = 0; j < Ny; j++) {
 		for (int i = 0; i < Nx; i++){
-			double N = 0, S = 0, E = 0, W = 0, C = 0;
+			double N = 0, S = 0, E = 0, W = 0, C;
 			// Debemos ajustar el stencil según el lugar de la grilla en la que nos encontramos
 			if (j != Ny - 1){ //NORTE
 				N = stencil[Nx * j + i] * vec[Nx * (j + 1) + i];
@@ -137,24 +135,24 @@ int main(){
 	double* r = (double*) calloc(g_size, sizeof(double));
 	sparse_matvec(Nx, Ny, stencil, x, r);
 	double rho, new_rho, beta, delta;
-	double* b = (double*) calloc(g_size, sizeof(double));
 
-	#pragma omp parallel for schedule(static)
+	// Calculamos r = - b
+	#pragma omp parallel for collapse(2) schedule(static)
 	for (int j = 0; j < Nx; j++){
 		for (int i = 0; i < Ny; i++){
-			b[Nx * j + i] = stencil[5 * g_size + Nx * j + i];
+			r[Nx * j + i] -= stencil[5 * g_size + Nx * j + i];
 		}
 	}
-	#pragma omp parallel for schedule(static)
-	for (int k = 0; k < g_size; k++){
-		r[k] = r[k] - b[k];
-	}
+	//#pragma omp parallel for schedule(static)
+	//for (int k = 0; k < g_size; k++){
+	//	r[k] = r[k] - b[k];
+	//}
 
 	//ofstream xdata;
 	//xdata.open("iteration_data.csv");
 	///////// MAIN LOOP /////////////////////////////
 	for (int i = 1; i < max_iterations + 1; i++){
-		cout << "--------ITERATION " << i << " ---------- ";
+		//cout << "--------ITERATION " << i << " ---------- ";
 		new_rho = dot(r, r, g_size);
 		if (i == 1){
 			for (int k = 0; k < g_size; k++){
@@ -170,33 +168,28 @@ int main(){
 		}
 		sparse_matvec(Nx, Ny, stencil, p, q);
 		delta = new_rho / dot(p, q, g_size);
-		//#pragma omp parallel for schedule(static)
+		#pragma omp parallel for schedule(static)
 		for (int k = 0; k < g_size; k++) {
-			x[k] = x[k] - delta * p[k];	
-		}
-
-		//#pragma omp parallel for schedule(static)
-		for (int k = 0; k < g_size; k++) {
-			r[k] = r[k] - delta * q[k];
+			x[k] -= delta * p[k];	
+			r[k] -= delta * q[k];
 		}
 		//for (int k = 0; k < g_size; k++){
 		//	xdata << x[k] << ",";
 		//}
 		//xdata << "\n";
-		cout << "res: " << dot(r, r, g_size) << "\n";
+		//cout << "res: " << dot(r, r, g_size) << "\n";
 		rho = new_rho;
 	}
 	//xdata.close();
 	end_time = omp_get_wtime();
 	total_time = end_time - start_time;
-	cout << "total time: " << total_time << "\n";
+	//cout << "total time: " << total_time << "\n";
 	ofstream time_file;
 	time_file.open("times.csv", ios_base::app);
 	time_file << total_time << ",";
 	time_file.close();
 
 	free(stencil);
-	free(b);
 	free(r);
 	free(p);
 	free(q);
