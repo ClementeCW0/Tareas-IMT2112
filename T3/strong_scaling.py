@@ -8,5 +8,8 @@ Y = df.iloc[0]
 print(len(Y))
 X = np.array([i for i in range(1, len(Y) + 1)])
 
-plt.plot(X, Y)
-plt.show()
+with plt.style.context("ggplot"):
+    plt.xlabel("N° Threads")
+    plt.ylabel("Tiempo (seg.)")
+    plt.plot(X, Y)
+    plt.show()
